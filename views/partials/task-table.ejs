@@ -1,0 +1,176 @@
+<table id="task-table" class="ui compact definition celled table">
+  <thead class="full-width">
+    <tr>
+      <th class="header-command"></th>
+      <th class="header-no">No</th>
+      <th class="header-description">Description</th>
+      <th class="header-status">Status</th>
+      <th class="header-owner">Owner</th>
+      <th class="header-priority">Priority</th>
+      <th class="header-estimate">Estimate</th>
+      <th class="header-remain">Remain</th>
+    </tr>
+  </thead>
+  <tbody data-bind="template: { name: 'task-template', foreach: tasks }">
+  </tbody>
+  <tfoot>
+    <tr>
+      <th></th>
+      <th colspan="7">
+        <div class="ui segment">
+          <form class="ui mini form" data-bind="submit: handleSubmitNewTask">
+            <button class="ui mini button" type="submit">Add Task</button>
+            <div class="fields">
+              <div class="ten wide field">
+                <label>Description</label>
+                <input type="text" name="description" placeholder="Task Description">
+              </div>
+              <div class="two wide field">
+                <label>Owner</label>
+                <input type="text" name="owner" placeholder="Owner">
+              </div>
+              <div class="one wide field">
+                <label>Priority</label>
+                <input type="text" name="priority" placeholder="Priority">
+              </div>
+              <div class="one wide field">
+                <label>Estimate</label>
+                <input type="text" name="estimate" placeholder="Estimate">
+              </div>
+            </div>
+          </form>
+        </div>
+      </th>
+    </tr>
+  </tfoot>
+</table>
+
+<script type="text/html" id="task-template">
+<tr data-bind="event: { dragstart: function(d,e){return $root.handleTaskDragStart(d,e,$index())}, drop: function(d,e){return $root.handleTaskDrop(d,e,$index())}, dragover: function(){return false} }" draggable="true">
+  <td>
+    <i class="edit icon"></i>
+  </td>
+  <td data-bind="text: id"></td>
+  <td data-bind="style: { 'padding-left': level * 2 + 'em' }"><span data-bind="text: description, css: { 'body-description-with-level': level > 0 }"></span></td>
+  <td data-bidd="text: status"></td>
+  <td data-bind="text: owner"></td>
+  <td data-bind="text: priority"></td>
+  <td data-bind="text: estimate"></td>
+  <td data-bind="text: remain"></td>
+</tr>
+</script>
+
+<script type="application/javascript">
+$(function() {
+
+  var Task = function() {
+    this.description = "";
+    this.status = "";
+    this.owner = "";
+    this.priority = 0;
+    this.estimate = 0;
+    this.remain = 0;
+    this.level = 0;
+    this.order = -1;
+  };
+
+  var TasksViewModel = function() {
+    var self = this;
+
+    // visibility flags
+    this.shouldShowNewTaskForm = ko.observable(false);
+
+    // event handlers
+    this.handleTaskDragStart = function(task, e, idx) {
+      e.originalEvent.dataTransfer.effectAllowed = 'move';
+      e.originalEvent.dataTransfer.setData('text/plain', JSON.stringify({no: task.no, idx: idx}));
+      return true;
+    };
+
+    this.handleTaskDrop = function(task, e, tgtIdx) {
+      var payload = JSON.parse(e.originalEvent.dataTransfer.getData('text/plain'));
+      var srcNo = payload.no;
+      var tgtNo = task.no;
+      var srcIdx = payload.idx;
+      self.willSwapTasks({idx: srcIdx, no: srcNo}, {idx: tgtIdx, no: tgtNo}).then(function() {
+        Scumizu.log('swapped');
+      });
+      return false;
+    };
+
+    this.handleSubmitNewTask = function(formElem) {
+      var $formElem = $(formElem);
+      var desc = $formElem.find('input[name="description"]').val();
+      var owner = $formElem.find('input[name="owner"]').val();
+      var estimate = $formElem.find('input[name="estimate"]').val();
+      var task = new Task(+(new Date()));
+      task.description = desc;
+      task.owner = owner;
+      task.order = self.getMaxOrder() + 1;
+      self.willCreateTask(task).then(function() {
+        Scumizu.log('created');
+      });
+    };
+
+    // logic method
+    this.willCreateTask = function(task) {
+      return Scumizu.willPostJson('/task', task).then(function(t) {
+        self.tasks.push(t);
+      });
+    };
+
+    this.willUpdateTask = function(task) {
+      return Scumizu.willPatchJson('/task', task).then(function(t) {
+        self.tasks()[self.tasks.indexOf(task)] = t;
+        self.reorderTasks();
+      });
+    };
+
+    this.willSwapTasks = function(src, tgt) {
+      var tasks = self.tasks();
+      var srcTask = tasks[src.idx];
+      var tgtTask = tasks[tgt.idx];
+      var srcOrder = srcTask.order;
+      var tgtOrder = tgtTask.order;
+      srcTask.order = tgtOrder;
+      tgtTask.order = srcOrder;
+      return Scumizu.willPatchJsons([['/task', srcTask], ['/task', tgtTask]]).then(function(srcRes, tgtRes) {
+        tasks[tgt.idx] = srcRes[0];
+        tasks[src.idx] = tgtRes[0];
+        self.tasks(tasks);
+      });
+    };
+
+    this.reorderTasks = function() {
+      this.tasks.sort(function(left, right) {
+        var lorder = parseInt(left.order);
+        var rorder = parseInt(right.order);
+        return lorder == rorder ? 0 : (lorder < rorder ? -1 : 1);
+      });
+      Scumizu.log('reoderered');
+    };
+
+    this.getMaxOrder = function() {
+      var maxOrder = -1;
+      this.tasks().forEach(function(e) {
+        var eorder = parseInt(e.order);
+        maxOrder = eorder > maxOrder ? eorder : maxOrder;
+      });
+      return maxOrder;
+    };
+
+    // models
+    this.tasks = ko.observableArray([]);
+  };
+
+  var tasksViewModel = new TasksViewModel();
+  ko.applyBindings(tasksViewModel, document.getElementById('task-table'));
+  Scumizu.vm.tasks = tasksViewModel;
+
+  // load tasks
+  Scumizu.willGetJson('/task').then(function(data) {
+    tasksViewModel.tasks(data);
+    tasksViewModel.reorderTasks();
+  });
+});
+</script>
