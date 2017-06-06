@@ -2,6 +2,16 @@
   margin-top: 10px;
 }
 
+#drop-indicator {
+  background-color: #ff7474;
+  border-top: 3px dotted #ff6565;
+  height: 0px;
+  width: 100%;
+  z-index: 99999;
+  position: absolute;
+  display: none;
+}
+
 #task-table {
   font-size: 0.75em;
 
@@ -39,11 +49,21 @@
     }
   }
   tbody {
+    tr {
+      padding-top: 3px;
+    }
     td, th {
       padding-top: 0px;
       padding-bottom: 0px;
       margin-top: 0px;
       margin-bottom: 0px;
+    }
+    .on-dragged {
+      background-color: #efefef;
+      opacity: 0.3;
+    }
+    .on-drag-over {
+      border-top: 2px dotted #ffb0b0;
     }
     .body-description {
 

@@ -48,9 +48,14 @@ module.exports.datastores = {
     *    (See https://sailsjs.com/config/datastores for help.)                 *
     *                                                                          *
     ***************************************************************************/
-    // adapter: 'sails-mysql',
-    // url: 'mysql://user:password@host:port/database',
+    adapter: 'sails-mysql',
+    url: 'mysql://root@db:3306/scumizu',
 
+  },
+
+  cache: {
+    adapter: 'sails-redis',
+    url: 'redis://redis:6379',
   },
 
 

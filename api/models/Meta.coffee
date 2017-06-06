@@ -1,0 +1,18 @@
+ # Meta.coffee
+ #
+ # @description :: A model definition.  Represents a database table/collection/etc.
+ # @docs        :: https://sailsjs.com/docs/concepts/models-and-orm/models
+
+module.exports =
+
+  tableName: 'scmz_meta'
+
+  attributes:
+
+    projectName:
+      type:       'string'
+      columnType: 'varchar(512)'
+
+    projectDescription:
+      type:       'string'
+      columnType: 'text'

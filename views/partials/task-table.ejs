@@ -44,9 +44,16 @@
     </tr>
   </tfoot>
 </table>
+<div id="drop-indicator"></div>
 
+<%# タスク描画用のテンプレート %>
 <script type="text/html" id="task-template">
-<tr data-bind="event: { dragstart: function(d,e){return $root.handleTaskDragStart(d,e,$index())}, drop: function(d,e){return $root.handleTaskDrop(d,e,$index())}, dragover: function(){return false} }" draggable="true">
+<tr data-bind="event: { dragstart: function(d,e){return $root.handleTaskDragStart(d,e,$index())},
+                        dragend:   function(d,e){return $root.handleTaskDragEnd(d,e,$index())},
+                        dragenter: function(d,e){return $root.handleTaskDragEnter(d,e,$index())},
+                        dragleave: function(d,e){return $root.handleTaskDragLeave(d,e,$index())},
+                        drop:      function(d,e){return $root.handleTaskDrop(d,e,$index())},
+                        dragover:  function(){return false} }" draggable="true">
   <td>
     <i class="edit icon"></i>
   </td>
@@ -63,38 +70,57 @@
 <script type="application/javascript">
 $(function() {
 
-  var Task = function() {
-    this.description = "";
-    this.status = "";
-    this.owner = "";
-    this.priority = 0;
-    this.estimate = 0;
-    this.remain = 0;
-    this.level = 0;
-    this.order = -1;
-  };
-
   var TasksViewModel = function() {
     var self = this;
 
-    // visibility flags
-    this.shouldShowNewTaskForm = ko.observable(false);
+    //
+    // !Precached DOMs
+    //
+    this.$dropIndicator = $('#drop-indicator');
+    this.$taskTable = $('#task-table');
 
-    // event handlers
+    //
+    // !Event handlers
+    //
+
+    // ドラッグスタート時に呼ばれる
     this.handleTaskDragStart = function(task, e, idx) {
       e.originalEvent.dataTransfer.effectAllowed = 'move';
-      e.originalEvent.dataTransfer.setData('text/plain', JSON.stringify({no: task.no, idx: idx}));
+      e.originalEvent.dataTransfer.setData('text/plain', JSON.stringify({id: task.id, idx: idx}));
+      $(e.target).addClass('on-dragged');
+      self.$dropIndicator.css({width: self.$taskTable.width()});
       return true;
     };
 
-    this.handleTaskDrop = function(task, e, tgtIdx) {
-      var payload = JSON.parse(e.originalEvent.dataTransfer.getData('text/plain'));
-      var srcNo = payload.no;
-      var tgtNo = task.no;
-      var srcIdx = payload.idx;
-      self.willSwapTasks({idx: srcIdx, no: srcNo}, {idx: tgtIdx, no: tgtNo}).then(function() {
-        Scumizu.log('swapped');
-      });
+    // ドラッグ終了時に呼ばれる
+    this.handleTaskDragEnd = function(task, e, idx) {
+      $(e.target).removeClass('on-dragged');
+    };
+
+    this.handleTaskDragEnter = function(task, e, idx) {
+      var rect = $(e.target).closest('tr').get(0).getBoundingClientRect();
+      self.$dropIndicator.css({top: rect.top}).show();
+    };
+
+    this.handleTaskDragLeave = function(task, e, idx) {
+    };
+
+    // ドロップ完了時に呼ばれる
+    this.handleTaskDrop = function(tgtTask, e, tgtIdx) {
+      self.$dropIndicator.hide();
+      var tasks = self.tasks();
+      var srcInfo = JSON.parse(e.originalEvent.dataTransfer.getData('text/plain'));
+      var srcIdx = srcInfo.idx;
+      var srcTask = tasks[srcIdx];
+
+      if (tgtTask.id == srcTask.id) {
+        return; // src equals tgt, do nothing.
+      }
+
+      // tgtTaskのpreviousが変わる
+      tgtTask.previous = srcTask.id;
+      self.willUpdateTask(tgtTask);
+
       return false;
     };
 
@@ -103,63 +129,55 @@ $(function() {
       var desc = $formElem.find('input[name="description"]').val();
       var owner = $formElem.find('input[name="owner"]').val();
       var estimate = $formElem.find('input[name="estimate"]').val();
-      var task = new Task(+(new Date()));
+      var task = {};
       task.description = desc;
       task.owner = owner;
-      task.order = self.getMaxOrder() + 1;
       self.willCreateTask(task).then(function() {
         Scumizu.log('created');
       });
     };
 
-    // logic method
+    //
+    // !Logic methods
+    //
+
+    // 新規タスク作成、Promiseをかえす
     this.willCreateTask = function(task) {
       return Scumizu.willPostJson('/task', task).then(function(t) {
         self.tasks.push(t);
       });
     };
 
+    // タスク更新、Promiseをかえす
     this.willUpdateTask = function(task) {
       return Scumizu.willPatchJson('/task', task).then(function(t) {
         self.tasks()[self.tasks.indexOf(task)] = t;
-        self.reorderTasks();
       });
     };
 
-    this.willSwapTasks = function(src, tgt) {
-      var tasks = self.tasks();
-      var srcTask = tasks[src.idx];
-      var tgtTask = tasks[tgt.idx];
-      var srcOrder = srcTask.order;
-      var tgtOrder = tgtTask.order;
-      srcTask.order = tgtOrder;
-      tgtTask.order = srcOrder;
-      return Scumizu.willPatchJsons([['/task', srcTask], ['/task', tgtTask]]).then(function(srcRes, tgtRes) {
-        tasks[tgt.idx] = srcRes[0];
-        tasks[src.idx] = tgtRes[0];
-        self.tasks(tasks);
-      });
+    // 新しいタスクの設定
+    this.alterTasks = function(newTasks) {
+      var addedTaskIds = [];
+      var tasks = [];
+      for (var i = 0; i < newTasks.length; i++) {
+        var task = newTasks[i];
+        var taskIdx = i;
+
+        // タスク追加
+        if (!addedTaskIds.includes(task.id)) {
+          tasks.push(task);
+          addedTaskIds.push(task.id);
+        }
+
+        // 前のタスク追加
+      }
+
+      self.tasks(tasks);
     };
 
-    this.reorderTasks = function() {
-      this.tasks.sort(function(left, right) {
-        var lorder = parseInt(left.order);
-        var rorder = parseInt(right.order);
-        return lorder == rorder ? 0 : (lorder < rorder ? -1 : 1);
-      });
-      Scumizu.log('reoderered');
-    };
-
-    this.getMaxOrder = function() {
-      var maxOrder = -1;
-      this.tasks().forEach(function(e) {
-        var eorder = parseInt(e.order);
-        maxOrder = eorder > maxOrder ? eorder : maxOrder;
-      });
-      return maxOrder;
-    };
-
-    // models
+    //
+    // !Models
+    //
     this.tasks = ko.observableArray([]);
   };
 
@@ -167,10 +185,13 @@ $(function() {
   ko.applyBindings(tasksViewModel, document.getElementById('task-table'));
   Scumizu.vm.tasks = tasksViewModel;
 
-  // load tasks
-  Scumizu.willGetJson('/task').then(function(data) {
-    tasksViewModel.tasks(data);
-    tasksViewModel.reorderTasks();
-  });
+  // タスクのロードを開始する
+  Scumizu.startTasksView = function(opts) {
+    /* var path = opts.path || '/task';*/
+    サーバーサイドからタスクをロードする
+    Scumizu.willGetJson(path).then(function(data) {
+      tasksViewModel.alterTasks(data);
+    });
+  };
 });
 </script>

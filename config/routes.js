@@ -20,21 +20,17 @@ module.exports.routes = {
   *                                                                          *
   ***************************************************************************/
 
-  '/': {
-    view: 'index'
-  },
+  'GET /': 'PageController.index',
 
-  '/backlog': {
-    view: 'backlog'
-  },
+  'GET /backlog': 'PageController.backlog',
 
-  '/sprints': {
-    view: 'sprints'
-  },
+  'GET /sprints':           'PageController.sprints',
+  'GET /sprint/create':     'PageController.sprintCreate',
+  'GET /sprint/update/:id': 'PageController.sprintUpdate',
 
-  '/tasks': {
-    view: 'tasks'
-  },
+  'GET /login':  'PageController.login',
+  'GET /signup': 'PageController.signup',
+  'GET /logout': 'PageController.logout',
 
   /***************************************************************************
   *                                                                          *
@@ -46,4 +42,16 @@ module.exports.routes = {
   *                                                                          *
   ***************************************************************************/
 
+  'POST /api/login':  'UserController.login',
+  'POST /api/signup': 'UserController.signup',
+  'GET  /api/logout': 'UserController.logout',
+
+  'POST /api/sprint/create':     'SprintController.create',
+  'POST /api/sprint/update/:id': 'SprintController.update',
+  'POST /api/sprint/delete/:id': 'SprintController.delete',
+
+  'GET  /api/task/current':    'TaskController.getCurrentSprintTasks',
+  'POST /api/task/create':     'TaskController.create',
+  'POST /api/task/update/:id': 'TaskController.update',
+  'POST /api/task/delete/:id': 'TaskController.delete',
 };

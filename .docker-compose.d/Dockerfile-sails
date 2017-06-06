@@ -1,0 +1,17 @@
+FROM node:8-alpine
+
+RUN apk add --no-cache mysql-client
+RUN addgroup -S scumizu && adduser -S -g scumizu scumizu
+
+ENV HOME=/home/scumizu
+
+COPY ./.docker-compose.d/start.sh ./package.json ./package-lock.json $HOME/sails/
+RUN chown -R scumizu:scumizu $HOME/*
+
+USER scumizu
+WORKDIR $HOME/sails
+
+EXPOSE 1337
+EXPOSE 9222
+
+RUN npm i

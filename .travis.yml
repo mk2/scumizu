@@ -1,0 +1,11 @@
+sudo: required
+
+services:
+  - docker
+
+before_install:
+  - npm run build
+  - npm run up
+
+script:
+  - npm run start-test

@@ -1,0 +1,52 @@
+<h1><%= title %></h1>
+
+<form action="<%= apiUrl %>" method="<%= apiMethod %>" class="ui form">
+  <div class="field">
+    <label>Name</label>
+    <input type="text" name="name" placeholder="" value="<%= sprint.name || '' %>">
+  </div>
+  <div class="field">
+    <label>Start Date</label>
+    <div class="ui calendar" id="start-date">
+      <div class="ui input left icon">
+        <i class="calendar icon"></i>
+        <input type="text" name="start_date" placeholder="2011/01/01" value="<%= sprint.startDate ? sails.moment(sprint.startDate).format('YYYY/MM/DD') : '' %>">
+      </div>
+    </div>
+  </div>
+  <div class="field">
+    <label>End Date</label>
+    <div class="ui calendar" id="end-date">
+      <div class="ui input left icon">
+        <i class="calendar icon"></i>
+        <input type="text" name="end_date" placeholder="2011/01/31" value="<%= sprint.endDate ? sails.moment(sprint.endDate).format('YYYY/MM/DD') : '' %>">
+      </div>
+    </div>
+  </div>
+  <div class="field">
+    <label>Memo</label>
+    <textarea name="memo" rows="5" value="<%= sprint.memo || '' %>"></textarea>
+  </div>
+  <button class="ui primary button" type="submit">Done</button>
+</form>
+
+<script>
+$(function() {
+
+  var calendarOpts = {
+    type: 'date',
+    formatter: {
+      date: function(date, settings) {
+        if (!date) return '';
+        var day = date.getDate();
+        var month = date.getMonth() + 1;
+        var year = date.getFullYear();
+        return year + '/' + month + '/' + day;
+      }
+    }
+  };
+
+  $('#start-date').calendar(calendarOpts);
+  $('#end-date').calendar(calendarOpts);
+});
+</script>

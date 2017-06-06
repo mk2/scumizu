@@ -19,6 +19,7 @@
  * For more information see:
  *   https://sailsjs.com/anatomy/app.js
  */
+require('coffee-script/register');
 
 
 // Ensure we're in the project directory, so cwd-relative paths work as expected

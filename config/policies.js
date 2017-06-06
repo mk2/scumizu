@@ -31,19 +31,24 @@ module.exports.policies = {
   * and its actions                                                          *
   *                                                                          *
   ***************************************************************************/
-  // UserController: {
-  //
-  //   // We might mandate that requests come from a logged-in user for
-  //   // most actions in this controller.
-  //   '*': 'isLoggedIn',
-  //
-  //   // But we'll let anyone access the 'login' and 'signup' actions
-  //   login: true,
-  //   signup: true,
-  //
-  //   // And we'll only let admins delete users.
-  //   destroy: 'isAdmin',
-  //
-  // },
+  PageController: {
+    '*':    'isLoggedIn',
+    login:  true,
+    signup: true,
+  },
+
+  UserController: {
+    '*':    'isLoggedIn',
+    login:  true,
+    signup: true,
+  },
+
+  TaskController: {
+    '*': true,
+  },
+
+  SprintController: {
+    '*': 'isLoggedIn',
+  },
 
 };

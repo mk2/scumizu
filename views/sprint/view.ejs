@@ -1,0 +1,30 @@
+<a href="/sprint/create" class="ui primary button">
+  New Sprint
+</a>
+
+<table id="sprint-table" class="ui definition celled table">
+  <thead class="full-width">
+    <tr>
+      <th class="header-command"></th>
+      <th>Name</th>
+      <th>Start Date</th>
+      <th>End Date</th>
+      <th>Memo</th>
+    </tr>
+  </thead>
+  <tbody>
+  <% for (var i = 0; i < sprints.length; i++) { %>
+    <% if (!sprints[i].isHidden) { %>
+    <tr>
+      <td>
+        <a href="/sprint/update/<%= sprints[i].id %>"><i class="edit icon"></i></a>
+      </td>
+      <td><%= sprints[i].name %></td>
+      <td><%= sails.moment(sprints[i].startDate).format('YYYY/MM/DD') %></td>
+      <td><%= sails.moment(sprints[i].endDate).format('YYYY/MM/DD') %></td>
+      <td><%= sprints[i].memo %></td>
+    </tr>
+    <% } %>
+  <% } %>
+  </tbody>
+</table>

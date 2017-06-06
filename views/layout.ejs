@@ -30,7 +30,7 @@
 
     <!--STYLES-->
     <link rel="stylesheet" href="/styles/importer.css">
-    <link rel="stylesheet" href="/styles/jquery-ui.css">
+    <link rel="stylesheet" href="/styles/semantic_calendar.css">
     <link rel="stylesheet" href="/styles/semantic.css">
     <!--STYLES END-->
   </head>
@@ -105,9 +105,10 @@
     <!--SCRIPTS-->
     <script src="/dependencies/sails.io.js"></script>
     <script src="/dependencies/001_jquery.js"></script>
-    <script src="/dependencies/002_jquery-ui.js"></script>
-    <script src="/dependencies/003_knockout.js"></script>
-    <script src="/dependencies/003_semantic.js"></script>
+    <script src="/dependencies/001_moment.js"></script>
+    <script src="/dependencies/002_knockout.js"></script>
+    <script src="/dependencies/002_semantic.js"></script>
+    <script src="/dependencies/003_semantic_calendar.js"></script>
     <script src="/js/app.js"></script>
     <!--SCRIPTS END-->
 
@@ -120,19 +121,23 @@
           <i class="list layout icon"></i> Backlog
         </a>
         <a href="/sprints" class="item">
-          <i class="calendar icon"></i> Sprints
+          <i class="calendar icon"></i> Sprint
         </a>
         <div class="ui simple dropdown item">
           More
           <i class="dropdown icon"></i>
           <div class="menu">
+          </div>
+        </div>
+        <div class="ui simple dropdown right item">
+          User
+          <i class="dropdown icon"></i>
+          <div class="menu">
             <a class="item"><i class="edit icon"></i> Edit Profile</a>
             <a class="item"><i class="globe icon"></i> Choose Language</a>
             <a class="item"><i class="settings icon"></i> Account Settings</a>
+            <a class="item"><i class="power icon"></i> Logout</a>
           </div>
-        </div>
-        <div class="right item">
-          <div class="ui input"><input type="text" placeholder="Search..."></div>
         </div>
       </div>
     </div>

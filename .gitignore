@@ -129,4 +129,8 @@ nbproject
 .idea
 .node_history
 dump.rdb
-
+TAGS
+GPATH
+GRTAGS
+GTAGS
+.pm2

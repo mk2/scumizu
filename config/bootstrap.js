@@ -11,8 +11,44 @@
 
 module.exports.bootstrap = function(done) {
 
-  // It's very important to trigger this callback method when you are finished
-  // with the bootstrap!  (otherwise your server will never lift, since it's waiting on the bootstrap)
-  return done();
+  sails.log('!!! Start Scumizu bootstrap...');
 
+  // set moment to sails.moment for global access
+  sails.moment = require('moment');
+
+  // setup backlog sprint
+  Sprint.create({
+    name:     'backlog',
+    startDate: 0,
+    endDate:   0,
+    memo:     'not editable',
+    isLocked:  true,
+    isHidden:  true,
+  }).then(() => {
+    sails.log('backlog sprint was created!');
+
+    // 開発環境ではテスト用ユーザーを追加する
+    // TODO バックログ用のルートタスクを追加
+    if (sails.config.environment === 'development' ||
+        sails.config.environment === 'test') {
+      const brcypt   = require('bcryptjs'),
+            name     = 'scumizu master',
+            password = 'ilovescumizu',
+            email    = 'scumizu';
+
+      brcypt.hash(password, sails.config.auth.saltRounds, (err, hash) => {
+        User.create({
+          name,
+          password: hash,
+          email,
+        }).then(() => {
+          sails.log('Default user created!');
+          done();
+        }).catch(err => {
+          sails.log('No dummy user.');
+          done();
+        });
+      });
+    }
+  });
 };
