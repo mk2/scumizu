@@ -10,7 +10,7 @@ describe 'タスク作成と検索のテスト', () ->
   sprint2 = null
   tasks2 = []
   tasks2ids = []
-  sprint3 = null【タップ】バナー
+  sprint3 = null
   tasks3 = []
   tasks3ids = []
   now = +(new Date())
